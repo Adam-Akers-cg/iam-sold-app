@@ -1,0 +1,12 @@
+module.exports = {
+    presets: ['next/babel'],
+    overrides: [
+        {
+            test: /node_modules[\\/]react-icons[\\/]/,
+            compact: true, // Skip processing for react-icons
+        },
+    ],
+    plugins: [
+        '@babel/plugin-transform-runtime', // Add runtime optimizations
+    ],
+};

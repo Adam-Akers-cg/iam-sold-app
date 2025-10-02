@@ -1,0 +1,193 @@
+Multi-Step Form Documentation
+
+This document explains how the Multi-Step Form works, how to configure it using a schema, and the available form elements you can use.
+
+🧩 How It Works
+
+The MultiStepForm component is a dynamic form builder that renders fields across multiple steps based on a structured JSON schema.
+
+It includes:
+
+Step-by-step navigation (with back/next buttons)
+
+Validation at each step
+
+Animated transitions
+
+A progress bar with step indicators (circles)
+
+Dynamic rendering of form components
+
+🗂️ Project Structure and File Roles
+
+Here’s how the components and logic are split:
+
+multi-step-form.js
+
+Main component that drives step logic, form state, progress bar, and handles submit/reset.
+
+Uses animation (framer-motion) for smooth transitions.
+
+Renders each step’s fields dynamically.
+
+dynamic-fields.js
+
+Maps schema-defined field types to corresponding reusable field components.
+
+Supports inputs like text, textarea, checkbox, range, HTML content, etc.
+
+Field Components (in components/forms/)
+
+Reusable components like TextInput, DateInput, RangeInput, etc.
+
+Follows a common prop interface: label, name, value, onChange, error
+
+📄 Schema Structure
+
+The form is configured by passing a formSchema prop — an array of step objects. Each step has:
+
+{
+  step: 0,
+  title: 'Step Title',
+  fields: [
+    {
+      name: 'fieldName',
+      label: 'Field Label',
+      type: 'text', // see supported types below
+      required: true, // optional
+      validation: (value) => Boolean(value),
+      message: 'Validation error message',
+      options: [ // optional, for select, radio, checkbox
+        { label: 'Option 1', value: 'option1' },
+        { label: 'Option 2', value: 'option2' }
+      ],
+      pattern: '^regex$', // optional
+      mask: 'maskPattern' // optional, for masked inputs like tel
+    }
+  ]
+}
+
+✅ Available Field Types
+
+📄 Text Inputs
+
+text – Standard text input
+
+email – Email input
+
+tel – Phone number (supports masking and pattern)
+
+number – Numeric input with optional min/max/step
+
+date – Date picker
+
+🧾 Structured Inputs
+
+textarea – Multi-line input field
+
+select – Dropdown menu
+
+radio – Radio button group
+
+checkbox – Checkbox group (multi-select)
+
+range – Slider input (with dynamic value display)
+
+html – Renders custom HTML blocks (e.g., instructions)
+
+📦 Validation
+
+Each field can include:
+
+validation – a function that receives the value and returns true/false
+
+message – the error message displayed if validation fails
+
+pattern – optional regex pattern for native validation
+
+📐 Example Schema
+
+const formSchema = [
+  {
+    step: 0,
+    title: 'User Info',
+    fields: [
+      {
+        name: 'name',
+        label: 'Full Name',
+        type: 'text',
+        validation: (v) => v.length > 1,
+        message: 'Name is required'
+      },
+      {
+        name: 'email',
+        label: 'Email',
+        type: 'email',
+        validation: (v) => /\S+@\S+\.\S+/.test(v),
+        message: 'Enter a valid email'
+      }
+    ]
+  },
+  {
+    step: 1,
+    title: 'Preferences',
+    fields: [
+      {
+        name: 'country',
+        label: 'Country',
+        type: 'select',
+        options: [
+          { label: 'USA', value: 'us' },
+          { label: 'UK', value: 'uk' }
+        ],
+        validation: (v) => !!v,
+        message: 'Please select a country'
+      },
+      {
+        type: 'html',
+        label: '<strong>Note:</strong> Choose your preferred country of residence.'
+      }
+    ]
+  },
+  {
+    step: 2,
+    title: 'Confirm',
+    fields: [] // Confirmation step displays all field values
+  }
+];
+
+✨ Advanced Features
+
+🔁 Conditional Logic
+
+You can conditionally include fields by filtering them before passing to the form, e.g.:
+
+if (formData.role === 'admin') {
+  schema[1].fields.push(adminOnlyField);
+}
+
+👁️ Field Visibility
+
+Add a visible function to fields:
+
+visible: (formData) => formData.age > 18
+
+Use this in the DynamicField map to skip rendering hidden fields.
+
+🖼️ Diagrams & Visual Representation
+
+MultiStepForm
+ ├── Progress Bar (step indicators)
+ ├── Card wrapper with current step
+ │    └── Fields (rendered by DynamicField)
+ └── Navigation Buttons (Back, Next, Submit)
+
+Sample UI:
+
+Step 1: User Info
+[●] [○] [○]
+
+[ Full Name: _______ ]
+[ Email: _______ ]
+
+[Next →]

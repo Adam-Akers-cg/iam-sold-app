@@ -1,0 +1,42 @@
+[
+    {
+        "term": "Amortization",
+        "description": "The process of gradually repaying a loan through regular payments that include both principal and interest over a set period of time."
+    },
+    {
+        "term": "Principal",
+        "description": "The original amount of money borrowed or the remaining balance of the loan, excluding interest."
+    },
+    {
+        "term": "Interest Rate",
+        "description": "The percentage charged by a lender for borrowing money, typically expressed annually."
+    },
+    {
+        "term": "Fixed-Rate Mortgage",
+        "description": "A mortgage with an interest rate that remains the same for the entire term of the loan."
+    },
+    {
+        "term": "Adjustable-Rate Mortgage (ARM)",
+        "description": "A mortgage with an interest rate that may change periodically based on changes in a corresponding financial index."
+    },
+    {
+        "term": "Escrow",
+        "description": "An account held by a third party where funds are deposited to pay taxes and insurance on behalf of the borrower."
+    },
+    {
+        "term": "Loan-to-Value Ratio (LTV)",
+        "description": "A ratio calculated by dividing the loan amount by the appraised value or purchase price of the property, used by lenders to assess risk."
+    },
+    {
+        "term": "Private Mortgage Insurance (PMI)",
+        "description": "Insurance that protects the lender if the borrower defaults on a loan, typically required when the down payment is less than 20%."
+    },
+    {
+        "term": "Closing Costs",
+        "description": "Fees and expenses paid at the closing of a real estate transaction, including lender fees, title insurance, and taxes."
+    },
+    {
+        "term": "Pre-approval",
+        "description": "A preliminary evaluation by a lender that determines how much a borrower may be eligible to borrow."
+    }
+]

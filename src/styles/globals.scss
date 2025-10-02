@@ -1,0 +1,29 @@
+@use 'sass:meta';
+@use 'bootstrap/scss/bootstrap';
+@use './custom.theme';
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#__next {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+}
+
+.btn {
+    font-weight: bold;
+}
+
+.blockquote .blockquote-footer {
+    font-style: italic;
+}
+
+.bg-primary .blockquote .blockquote-footer,
+.bg-info .blockquote .blockquote-footer {
+    color: var(--bs-white);
+}
