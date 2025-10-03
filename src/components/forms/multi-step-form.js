@@ -68,16 +68,6 @@ export const MultiStepForm = ({ onSubmit, formSchema }) => {
         e.preventDefault()
         if (validateStep() && onSubmit) {
             onSubmit(formData)
-            alert(
-                'Form submitted successfully!' +
-                    JSON.stringify(
-                        Object.entries(formData).filter(
-                            ([key]) => key !== 'undefined',
-                        ),
-                        null,
-                        2,
-                    ),
-            )
         }
     }
 

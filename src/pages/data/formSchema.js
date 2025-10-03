@@ -6,7 +6,7 @@ export const formSchema = [
         fields: [
             {
                 type: 'html',
-                label: '<h5>Is you property vacant?</h5><p>Vacant homes can move faster through auction routes</p>',
+                label: '<h5>Is you property vacant?</h5><p>Vacant homes can move faster through auction routes.</p>',
             },
             {
                 label: 'Select your option',
@@ -38,11 +38,11 @@ export const formSchema = [
                     { label: 'Upsizing', value: 'upsizing' },
                     { label: 'Downsizing', value: 'downsizing' },
                     { label: 'Relocation', value: 'relocation' },
-                    { label: 'Financial Reasons', value: 'financial reasons' },
+                    { label: 'Financial Reasons', value: 'financial' },
                     { label: 'Probate', value: 'probate' },
                     {
                         label: 'Personal/Family Reasons',
-                        value: 'personal/family reasons',
+                        value: 'personal',
                     },
                     { label: 'Other', value: 'other' },
                 ],
@@ -66,8 +66,8 @@ export const formSchema = [
                 type: 'radio',
                 options: [
                     { label: 'ASAP (0-2 months)', value: 'asap' },
-                    { label: 'Within 3 months', value: '3 months' },
-                    { label: '3-6 months', value: '3-6 months' },
+                    { label: 'Within 3 months', value: 'threeMonths' },
+                    { label: '3-6 months', value: 'sixMonths' },
                     { label: 'Flexible', value: 'flexible' },
                 ],
                 validation: (value) => !!value.trim(),
