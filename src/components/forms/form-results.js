@@ -251,7 +251,7 @@ export default function RecommendationCards({
         <div>
             {/* Pills row */}
             <div id="recommendations">
-                <PillResults results={answerPills} />
+                <PillResults results={answerPills} iconMap={iconMap} />
 
                 <div className="mb-3">
                     <small className="text-muted">

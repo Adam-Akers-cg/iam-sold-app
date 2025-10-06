@@ -33,7 +33,7 @@ export default function Home() {
     }
 
     return (
-        <Layout>
+        <Layout introHide={!introHide}>
             <Container>
                 <div className="my-5">
                     {!introHide ? (

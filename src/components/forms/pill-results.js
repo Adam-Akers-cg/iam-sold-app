@@ -1,10 +1,10 @@
 // If you use react-bootstrap Card elsewhere, import it under an alias:
-const PillResults = ({ answerPills }) => {
-    if (!answerPills) return null
+const PillResults = ({ results, iconMap }) => {
+    if (!results) return null
     return (
         <div className="mb-3">
             <div className="d-flex flex-wrap justify-content-center">
-                {answerPills.map((p) => {
+                {results.map((p) => {
                     if (!p) return null
                     const Icon = iconMap[p.qName?.toLowerCase()]
                     return (
