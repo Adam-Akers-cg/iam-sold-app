@@ -6,10 +6,12 @@ import {
     BsCalendar2,
     BsHouses,
 } from 'react-icons/bs'
-import clsx from 'clsx'
-import style from './multi-step-form.module.scss'
 import { Container } from 'react-bootstrap'
 import SaveAndPrint from '@/components/savePrint/SaveAndPrint'
+import ResultCard from '@/components/card/ResultCard'
+import IntroCard from '@/components/card/IntroCard'
+import DebugResults from '@/components/forms/debug-results'
+import PillResults from '@/components/forms/pill-results'
 
 // --- Begin component code ---
 let defaultFormSchema = null
@@ -109,12 +111,15 @@ export default function RecommendationCards({
 
     normalized.forEach(([qName, aValue]) => {
         if (!qName) return
+        // try case-insensitive match for the question key
         const qKey = findKeyCaseInsensitive(questionsObj, qName) || qName
         const question = questionsObj[qKey]
         if (!question) return
+
         const aKey = findKeyCaseInsensitive(question, aValue) || aValue
         const answerNode = question[aKey]
         if (!answerNode) return
+
         const scores = Array.isArray(answerNode.scores) ? answerNode.scores : []
         scores.forEach((s, idx) => {
             const num = Number(s) || 0
@@ -124,12 +129,99 @@ export default function RecommendationCards({
         })
     })
 
-    const results = scoreTypes.map((label, idx) => ({
+    // Build results from totals
+    let results = scoreTypes.map((label, idx) => ({
         label,
         total: totals[idx],
         reasons: Array.from(reasonBuckets[idx]),
     }))
+
+    // Sort descending
     results.sort((a, b) => b.total - a.total || a.label.localeCompare(b.label))
+
+    // If tie for top two, attempt tie-breaker
+    if (results.length >= 2 && results[0].total === results[1].total) {
+        const tieCfg = schemaRoot?.defaultSettings?.[0]?.tieBreaker
+        if (tieCfg && tieCfg.question && tieCfg.answers) {
+            // find the submitted answer for the tie question
+            const tieQuestionKey =
+                findKeyCaseInsensitive(questionsObj, tieCfg.question) ||
+                tieCfg.question
+            // find in normalized answers (case-insensitive)
+            const foundPair = normalized.find(([qn]) => {
+                if (!qn) return false
+                return (
+                    String(qn).toLowerCase() ===
+                    String(tieQuestionKey).toLowerCase()
+                )
+            })
+
+            if (foundPair) {
+                const submittedAnswer = foundPair[1]
+                // find the answer key in the question node (case-insensitive)
+                const questionNode =
+                    questionsObj[tieQuestionKey] ||
+                    questionsObj[
+                        findKeyCaseInsensitive(questionsObj, tieQuestionKey)
+                    ]
+                let submittedAnswerKey = null
+                if (questionNode) {
+                    submittedAnswerKey =
+                        findKeyCaseInsensitive(questionNode, submittedAnswer) ||
+                        submittedAnswer
+                } else {
+                    submittedAnswerKey = submittedAnswer
+                }
+
+                // lookup mapped scoreType name from tieCfg
+                const mappedScoreTypeName =
+                    tieCfg.answers?.[submittedAnswerKey] ||
+                    tieCfg.answers?.[String(submittedAnswerKey)]
+                if (mappedScoreTypeName) {
+                    // find index of the scoreType to bump
+                    const bumpIndex = scoreTypes.findIndex(
+                        (st) =>
+                            String(st).toLowerCase() ===
+                            String(mappedScoreTypeName).toLowerCase(),
+                    )
+                    if (bumpIndex >= 0) {
+                        // apply +1 bump
+                        totals[bumpIndex] = (totals[bumpIndex] || 0) + 1
+                        // update reason bucket to note tie-breaker (optional)
+                        reasonBuckets[bumpIndex].add(
+                            `Tie-breaker: +1 for ${mappedScoreTypeName} (based on ${tieCfg.question}=${submittedAnswerKey})`,
+                        )
+                        // rebuild and re-sort results after bump
+                        results = scoreTypes.map((label, idx) => ({
+                            label,
+                            total: totals[idx],
+                            reasons: Array.from(reasonBuckets[idx]),
+                        }))
+                        results.sort(
+                            (a, b) =>
+                                b.total - a.total ||
+                                a.label.localeCompare(b.label),
+                        )
+                    } else {
+                        console.warn(
+                            'Tie-breaker mapping matched a scoreType name that does not exist in scoreTypes:',
+                            mappedScoreTypeName,
+                        )
+                    }
+                } else {
+                    console.warn(
+                        'Tie-breaker configuration does not contain a mapping for the submitted answer:',
+                        submittedAnswerKey,
+                    )
+                }
+            } else {
+                console.warn(
+                    'Tie-breaker question not found in submitted answers:',
+                    tieCfg.question,
+                )
+            }
+        } // else no tieBreaker configured — do nothing
+    }
 
     const top = results[0] || null
     const second = results[1] || null
@@ -155,84 +247,11 @@ export default function RecommendationCards({
         }
     })
 
-    // Intro Card component
-
-    const IntroCard = ({ intro }) => {
-        if (!intro) return null
-        return (
-            <div
-                className={clsx(
-                    'card mb-3',
-                    style['intro-card'],
-                    'border-primary',
-                )}
-            >
-                <div className="card-body">
-                    <h5 className="card-title">{scoreTitle}</h5>
-                    <p className="card-text">{scoreDescription}</p>
-                </div>
-            </div>
-        )
-    }
-
-    // Card component
-    const Card = ({ item, rank }) => {
-        if (!item) return null
-        return (
-            <div className="card flex-fill">
-                <div className="card-body">
-                    <h5 className="card-title">
-                        {rank}. {item.label}
-                    </h5>
-                    <h6 className="mb-2 fw-bold text-primary">
-                        Score: {item.total}
-                    </h6>
-                    {item.reasons.length > 0 ? (
-                        <div>
-                            <strong>
-                                Reason{item.reasons.length > 1 ? 's' : ''}:
-                            </strong>
-                            <ul className="list-group list-group-flush">
-                                {item.reasons.map((r, i) => (
-                                    <li className="list-group-item" key={i}>
-                                        {r}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ) : (
-                        <p className="text-muted">
-                            No specific reasons contributed to this result.
-                        </p>
-                    )}
-                </div>
-            </div>
-        )
-    }
-
     return (
         <div>
             {/* Pills row */}
             <div id="recommendations">
-                <div className="mb-3">
-                    <div className="d-flex flex-wrap justify-content-center">
-                        {answerPills.map((p) => {
-                            if (!p) return null
-                            const Icon = iconMap[p.qName?.toLowerCase()]
-                            return (
-                                <span
-                                    key={p.key}
-                                    className="badge rounded-pill bg-primary text-white border fs-3 me-2 mb-2 px-3 py-2 d-flex align-items-center"
-                                >
-                                    {Icon && (
-                                        <Icon className="me-4" size={20} />
-                                    )}
-                                    {p.display}
-                                </span>
-                            )
-                        })}
-                    </div>
-                </div>
+                <PillResults results={answerPills} />
 
                 <div className="mb-3">
                     <small className="text-muted">
@@ -241,19 +260,20 @@ export default function RecommendationCards({
                 </div>
 
                 <Container>
-                    <IntroCard intro={top || second} />
+                    <IntroCard
+                        intro={top || second}
+                        scoreTitle={scoreTitle}
+                        scoreDescription={scoreDescription}
+                    />
                 </Container>
                 <Container className="d-flex gap-3 mb-4">
-                    <Card item={top} rank={1} />
-                    <Card item={second} rank={2} />
+                    <ResultCard item={top} rank={1} />
+                    <ResultCard item={second} rank={2} />
                 </Container>
             </div>
 
             {/* Optional debug */}
-            <details>
-                <summary>Debug — full totals</summary>
-                <pre>{JSON.stringify(results, null, 2)}</pre>
-            </details>
+            <DebugResults results={results} />
 
             {/* Controls: Print */}
             <SaveAndPrint

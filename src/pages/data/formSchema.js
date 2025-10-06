@@ -99,9 +99,4 @@ export const formSchema = [
             ,
         ],
     },
-    {
-        step: 4,
-        title: 'Confirm',
-        fields: [],
-    },
 ]
