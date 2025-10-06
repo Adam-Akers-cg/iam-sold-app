@@ -13,24 +13,24 @@ import IntroCard from '@/components/card/IntroCard'
 import DebugResults from '@/components/forms/debug-results'
 import PillResults from '@/components/forms/pill-results'
 
-// --- Begin component code ---
+// --- Load default form schema, with fallback ---
 let defaultFormSchema = null
 try {
-    // try to load schema file near the component
     // eslint-disable-next-line global-require
     const s = require('@/pages/data/scoreSchema')
     defaultFormSchema = s.scoreSchema || s.formSchema || s.default || s
-} catch (e) {
+} catch {
     try {
         // fallback older name
         // eslint-disable-next-line global-require
         const s2 = require('@/pages/data/scoreSchema')
         defaultFormSchema = s2.formSchema || s2.scoreSchema || s2
-    } catch (e2) {
+    } catch {
         defaultFormSchema = null
     }
 }
 
+// --- Utility: Normalize answers to [key, value] pairs ---
 function normalizeAnswers(raw) {
     if (!raw) return []
     if (Array.isArray(raw)) {
@@ -46,24 +46,23 @@ function normalizeAnswers(raw) {
             return raw.map((obj) => Object.entries(obj)[0] || [])
         }
         try {
-            const parsed = JSON.parse(raw)
-            return normalizeAnswers(parsed)
-        } catch (e) {
+            return normalizeAnswers(JSON.parse(raw))
+        } catch {
             return []
         }
     }
     if (typeof raw === 'object') return Object.entries(raw)
     if (typeof raw === 'string') {
         try {
-            const parsed = JSON.parse(raw)
-            return normalizeAnswers(parsed)
-        } catch (e) {
+            return normalizeAnswers(JSON.parse(raw))
+        } catch {
             return []
         }
     }
     return []
 }
 
+// --- Utility: Case-insensitive key lookup ---
 const findKeyCaseInsensitive = (obj, target) => {
     if (!obj || typeof obj !== 'object') return null
     const lower = String(target).toLowerCase()
@@ -83,7 +82,7 @@ export default function RecommendationCards({
     answers,
     formSchema = defaultFormSchema,
 }) {
-    // Basic existence check
+    // --- Schema checks ---
     if (!formSchema || !Array.isArray(formSchema) || formSchema.length === 0) {
         return (
             <div className="alert alert-warning">
@@ -94,24 +93,23 @@ export default function RecommendationCards({
     }
 
     const schemaRoot = formSchema[0]
-    const scoreTypes = schemaRoot?.defaultSettings?.[0]?.scoreTypes || []
+    const defaultSettings = schemaRoot?.defaultSettings?.[0] || {}
+    const scoreTypes = defaultSettings.scoreTypes || []
     const questionsObj = schemaRoot?.questions?.[0] || {}
     const scoreTitle =
-        schemaRoot?.defaultSettings?.[0]?.scoreTitle ||
-        'Your Recommended Selling Methods'
+        defaultSettings.scoreTitle || 'Your Recommended Selling Methods'
     const scoreDescription =
-        schemaRoot?.defaultSettings?.[0]?.scoreDescription ||
+        defaultSettings.scoreDescription ||
         'Based on your answers, here are the top recommended methods for selling your property. Each method is scored based on how well it aligns with your situation and preferences. The higher the score, the better the fit.'
 
     const normalized = normalizeAnswers(answers)
 
-    // --- scoring ---
-    const totals = scoreTypes.map(() => 0)
+    // --- Scoring ---
+    const totals = Array(scoreTypes.length).fill(0)
     const reasonBuckets = scoreTypes.map(() => new Set())
 
     normalized.forEach(([qName, aValue]) => {
         if (!qName) return
-        // try case-insensitive match for the question key
         const qKey = findKeyCaseInsensitive(questionsObj, qName) || qName
         const question = questionsObj[qKey]
         if (!question) return
@@ -129,69 +127,53 @@ export default function RecommendationCards({
         })
     })
 
-    // Build results from totals
+    // --- Build and sort results ---
     let results = scoreTypes.map((label, idx) => ({
         label,
         total: totals[idx],
         reasons: Array.from(reasonBuckets[idx]),
     }))
-
-    // Sort descending
     results.sort((a, b) => b.total - a.total || a.label.localeCompare(b.label))
 
-    // If tie for top two, attempt tie-breaker
+    // --- Tie-breaker logic ---
     if (results.length >= 2 && results[0].total === results[1].total) {
-        const tieCfg = schemaRoot?.defaultSettings?.[0]?.tieBreaker
+        const tieCfg = defaultSettings.tieBreaker
         if (tieCfg && tieCfg.question && tieCfg.answers) {
-            // find the submitted answer for the tie question
             const tieQuestionKey =
                 findKeyCaseInsensitive(questionsObj, tieCfg.question) ||
                 tieCfg.question
-            // find in normalized answers (case-insensitive)
-            const foundPair = normalized.find(([qn]) => {
-                if (!qn) return false
-                return (
+            const foundPair = normalized.find(
+                ([qn]) =>
+                    qn &&
                     String(qn).toLowerCase() ===
-                    String(tieQuestionKey).toLowerCase()
-                )
-            })
-
+                        String(tieQuestionKey).toLowerCase(),
+            )
             if (foundPair) {
                 const submittedAnswer = foundPair[1]
-                // find the answer key in the question node (case-insensitive)
                 const questionNode =
                     questionsObj[tieQuestionKey] ||
                     questionsObj[
                         findKeyCaseInsensitive(questionsObj, tieQuestionKey)
                     ]
-                let submittedAnswerKey = null
-                if (questionNode) {
-                    submittedAnswerKey =
-                        findKeyCaseInsensitive(questionNode, submittedAnswer) ||
-                        submittedAnswer
-                } else {
-                    submittedAnswerKey = submittedAnswer
-                }
+                const submittedAnswerKey = questionNode
+                    ? findKeyCaseInsensitive(questionNode, submittedAnswer) ||
+                      submittedAnswer
+                    : submittedAnswer
 
-                // lookup mapped scoreType name from tieCfg
                 const mappedScoreTypeName =
                     tieCfg.answers?.[submittedAnswerKey] ||
                     tieCfg.answers?.[String(submittedAnswerKey)]
                 if (mappedScoreTypeName) {
-                    // find index of the scoreType to bump
                     const bumpIndex = scoreTypes.findIndex(
                         (st) =>
                             String(st).toLowerCase() ===
                             String(mappedScoreTypeName).toLowerCase(),
                     )
                     if (bumpIndex >= 0) {
-                        // apply +1 bump
                         totals[bumpIndex] = (totals[bumpIndex] || 0) + 1
-                        // update reason bucket to note tie-breaker (optional)
                         reasonBuckets[bumpIndex].add(
                             `Tie-breaker: +1 for ${mappedScoreTypeName} (based on ${tieCfg.question}=${submittedAnswerKey})`,
                         )
-                        // rebuild and re-sort results after bump
                         results = scoreTypes.map((label, idx) => ({
                             label,
                             total: totals[idx],
@@ -203,30 +185,33 @@ export default function RecommendationCards({
                                 a.label.localeCompare(b.label),
                         )
                     } else {
+                        // eslint-disable-next-line no-console
                         console.warn(
                             'Tie-breaker mapping matched a scoreType name that does not exist in scoreTypes:',
                             mappedScoreTypeName,
                         )
                     }
                 } else {
+                    // eslint-disable-next-line no-console
                     console.warn(
                         'Tie-breaker configuration does not contain a mapping for the submitted answer:',
                         submittedAnswerKey,
                     )
                 }
             } else {
+                // eslint-disable-next-line no-console
                 console.warn(
                     'Tie-breaker question not found in submitted answers:',
                     tieCfg.question,
                 )
             }
-        } // else no tieBreaker configured — do nothing
+        }
     }
 
     const top = results[0] || null
     const second = results[1] || null
 
-    // build pills (uses textAnswer where available)
+    // --- Build pills for answers ---
     const answerPills = normalized.map(([qName, aValue], i) => {
         if (!qName) return null
         const qKey = findKeyCaseInsensitive(questionsObj, qName) || qName
@@ -247,6 +232,7 @@ export default function RecommendationCards({
         }
     })
 
+    // --- Render ---
     return (
         <div>
             {/* Pills row */}
