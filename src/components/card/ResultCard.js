@@ -11,7 +11,7 @@ const ResultCard = ({ item, rank }) => {
 
     return (
         // Use your own markup or react-bootstrap's Card under the alias BootstrapCard
-        <div className="card mb-3">
+        <div className="card mb-3 flex-fill">
             <div className="card-body">
                 <h5 className="card-title">
                     {rank}. {String(item.label)}
