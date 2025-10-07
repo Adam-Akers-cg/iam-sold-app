@@ -9,7 +9,26 @@ import { BsChevronRight, BsChevronLeft } from 'react-icons/bs'
 // --- Utility: Initialize form data from schema ---
 function initializeFormData(schema) {
     return Object.fromEntries(
-        schema.flatMap((step) => step.fields.map((field) => [field.name, ''])),
+        schema.flatMap((step) =>
+            (step.fields || []).map((field) => {
+                // ensure every field has a name (avoid undefined)
+                const name =
+                    field.name ??
+                    `field_${Math.random().toString(36).slice(2, 8)}`
+
+                // prefer explicit value or default
+                const explicit = field.value ?? field.default
+
+                if (field.type === 'range') {
+                    // For range keep a numeric value
+                    const defaultVal = explicit ?? field.min ?? 0
+                    return [name, Number(defaultVal)]
+                }
+
+                // other fields: use provided default/value or empty string
+                return [name, explicit ?? '']
+            }),
+        ),
     )
 }
 

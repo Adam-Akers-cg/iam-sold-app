@@ -14,13 +14,18 @@ export const RangeInput = ({
 }) => (
     <Form.Group className="mb-3">
         <Form.Label htmlFor={name}>
-            {label}: <strong>{value}</strong>
+            {label}: <strong>{value ?? min}</strong>
         </Form.Label>
         <Form.Range
             id={name}
             name={name}
-            value={value}
-            onChange={onChange}
+            value={value ?? min}
+            onChange={(e) =>
+                // normalize to a numeric value so parent state gets a number not a string
+                onChange({
+                    target: { name, value: Number(e.target.value) },
+                })
+            }
             min={min}
             max={max}
             step={step}

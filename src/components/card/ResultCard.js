@@ -1,7 +1,3 @@
-// If you use react-bootstrap Card elsewhere, import it under an alias:
-import { Card as BootstrapCard, Container } from 'react-bootstrap' // optional
-
-// --- Replace your previous Card helper with this ResultCard ---
 const ResultCard = ({ item, rank }) => {
     // defensive: if no item, render nothing
     if (!item) return null
@@ -10,7 +6,6 @@ const ResultCard = ({ item, rank }) => {
     const safeReasons = Array.isArray(item.reasons) ? item.reasons : []
 
     return (
-        // Use your own markup or react-bootstrap's Card under the alias BootstrapCard
         <div className="card mb-3 flex-fill">
             <div className="card-body">
                 <h5 className="card-title">

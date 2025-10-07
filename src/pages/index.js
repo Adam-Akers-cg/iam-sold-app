@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import Layout from '@/components/layout/layout'
 import { Container } from 'react-bootstrap'
 import { MultiStepForm } from '../components/forms/multi-step-form'
@@ -7,41 +7,36 @@ import { formSchema } from '../pages/data/formSchema'
 import { scoreSchema } from '../pages/data/scoreSchema'
 import { introSchema } from '../pages/data/introSchema'
 import Intro from '../components/intro/intro'
-
 import { useRouter } from 'next/router'
 
 export default function Home() {
     const router = useRouter()
-    const [hideShow, setHideShow] = useState(true)
-    const [introHide, setIntroHide] = useState(false)
-    const [formResults, setFormResults] = useState()
+    const [showForm, setShowForm] = useState(true)
+    const [showIntro, setShowIntro] = useState(true)
+    const [formResults, setFormResults] = useState(null)
 
     useEffect(() => {
         document.title = 'Home'
         document.documentElement.lang = 'en'
     }, [])
 
-    const handleSubmit = (data) => {
-        setHideShow(false)
+    const handleSubmit = useCallback((data) => {
+        setShowForm(false)
         setFormResults(
-            JSON.stringify(
-                Object.entries(data).filter(([key]) => key !== 'undefined'),
-                null,
-                2,
-            ),
+            Object.entries(data).filter(([key]) => key !== 'undefined'),
         )
-    }
+    }, [])
 
     return (
-        <Layout introHide={!introHide}>
+        <Layout introHide={showIntro}>
             <Container>
                 <div className="my-5">
-                    {!introHide ? (
+                    {showIntro ? (
                         <Intro
                             introSchema={introSchema}
-                            setIntroHide={() => setIntroHide(true)}
+                            setIntroHide={() => setShowIntro(false)}
                         />
-                    ) : hideShow ? (
+                    ) : showForm ? (
                         <MultiStepForm
                             onSubmit={handleSubmit}
                             formSchema={formSchema}
@@ -51,7 +46,7 @@ export default function Home() {
                             <h3>Thank you for your submission!</h3>
                             <p>
                                 We appreciate your time and effort in completing
-                                the form. here are your results:
+                                the form. Here are your results:
                             </p>
                             <RecommendationCards
                                 answers={formResults}
@@ -70,3 +65,4 @@ export default function Home() {
         </Layout>
     )
 }
+// --- End component code ---

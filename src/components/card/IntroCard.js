@@ -1,7 +1,6 @@
-// If you use react-bootstrap Card elsewhere, import it under an alias:
 import clsx from 'clsx'
 import style from '../forms/multi-step-form.module.scss'
-// --- Replace your previous Card helper with this IntroCard ---
+
 const IntroCard = ({ intro, scoreTitle, scoreDescription }) => {
     if (!intro) return null
     return (
