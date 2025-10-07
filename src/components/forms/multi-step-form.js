@@ -32,7 +32,7 @@ function initializeFormData(schema) {
     )
 }
 
-export const MultiStepForm = ({ onSubmit, formSchema }) => {
+export const MultiStepForm = ({ onSubmit, formSchema, formId = 'default' }) => {
     const [step, setStep] = useState(0)
     const [direction, setDirection] = useState(1)
     const [formData, setFormData] = useState(() =>
@@ -89,10 +89,11 @@ export const MultiStepForm = ({ onSubmit, formSchema }) => {
         (e) => {
             e.preventDefault()
             if (validateStep() && onSubmit) {
-                onSubmit(formData)
+                // send an object with id so parent can separate forms
+                onSubmit({ id: formId, data: formData })
             }
         },
-        [validateStep, onSubmit, formData],
+        [validateStep, onSubmit, formData, formId],
     )
 
     // Render step content

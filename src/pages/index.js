@@ -20,10 +20,19 @@ export default function Home() {
         document.documentElement.lang = 'en'
     }, [])
 
-    const handleSubmit = useCallback((data) => {
+    const handleFormSubmit = useCallback(({ id, data }) => {
+        console.log(
+            Object.entries(data).filter(
+                ([key, value]) =>
+                    key !== 'undefined' && value !== undefined && value !== '',
+            ),
+        )
         setShowForm(false)
         setFormResults(
-            Object.entries(data).filter(([key]) => key !== 'undefined'),
+            Object.entries(data).filter(
+                ([key, value]) =>
+                    key !== 'undefined' && value !== undefined && value !== '',
+            ),
         )
     }, [])
 
@@ -38,7 +47,8 @@ export default function Home() {
                         />
                     ) : showForm ? (
                         <MultiStepForm
-                            onSubmit={handleSubmit}
+                            formId="moveMatchForm"
+                            onSubmit={handleFormSubmit}
                             formSchema={formSchema}
                         />
                     ) : (

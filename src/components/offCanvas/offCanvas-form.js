@@ -40,8 +40,13 @@ export default function OffCanvasForm({
             })
     }, [jsonPath])
 
-    const handleSubmit = (data) => {
-        console.log('Form submitted:', data)
+    const handleSubmitSettings = ({ id, data }) => {
+        console.log(
+            Object.entries(data).filter(
+                ([key, value]) =>
+                    key !== 'undefined' && value !== undefined && value !== '',
+            ),
+        )
     }
 
     const variants = {
@@ -115,7 +120,8 @@ export default function OffCanvasForm({
                             {error && <Alert variant="danger">{error}</Alert>}
                             {schema && (
                                 <MultiStepForm
-                                    onSubmit={handleSubmit}
+                                    formId="formSettings"
+                                    onSubmit={handleSubmitSettings}
                                     formSchema={schema}
                                 />
                             )}

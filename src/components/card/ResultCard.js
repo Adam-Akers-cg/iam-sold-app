@@ -6,6 +6,7 @@ const ResultCard = ({ item, rank }) => {
     const safeReasons = Array.isArray(item.reasons) ? item.reasons : []
 
     return (
+        // Use your own markup or react-bootstrap's Card under the alias BootstrapCard
         <div className="card mb-3 flex-fill">
             <div className="card-body">
                 <h5 className="card-title">
