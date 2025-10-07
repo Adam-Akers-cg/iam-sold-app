@@ -12,8 +12,8 @@ const PillResults = ({ results, iconMap }) => {
                             key={p.key}
                             className="badge rounded-pill bg-primary text-white border fs-3 me-2 mb-2 px-3 py-2 d-flex align-items-center"
                         >
-                            {Icon && <Icon className="me-4" size={20} />}
-                            {p.display}
+                            {Icon && <Icon className="ms-2 me-4" size={20} />}
+                            <p className="mb-1 me-2">{p.display}</p>
                         </span>
                     )
                 })}
