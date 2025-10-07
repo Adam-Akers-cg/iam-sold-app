@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Offcanvas, Spinner, Alert } from 'react-bootstrap'
+import { Offcanvas, Spinner, Alert, Button } from 'react-bootstrap'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MultiStepForm } from '@/components/forms/multi-step-form'
 
@@ -22,6 +22,7 @@ export default function OffCanvasForm({
     const [schema, setSchema] = useState(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
+    const [formSettingHide, setFormSettingHide] = useState(true)
 
     useEffect(() => {
         if (!jsonPath || !schemaMap[jsonPath]) return
@@ -41,12 +42,18 @@ export default function OffCanvasForm({
     }, [jsonPath])
 
     const handleSubmitSettings = ({ id, data }) => {
+        setFormSettingHide(false)
         console.log(
             Object.entries(data).filter(
                 ([key, value]) =>
                     key !== 'undefined' && value !== undefined && value !== '',
             ),
         )
+    }
+
+    const handleClose = () => {
+        setFormSettingHide(true)
+        onHide()
     }
 
     const variants = {
@@ -94,7 +101,7 @@ export default function OffCanvasForm({
             {show && (
                 <Offcanvas
                     show={show}
-                    onHide={onHide}
+                    onHide={handleClose}
                     placement={placement}
                     scroll={scroll}
                     backdrop={backdrop}
@@ -118,13 +125,18 @@ export default function OffCanvasForm({
                         >
                             {loading && <Spinner animation="border" />}
                             {error && <Alert variant="danger">{error}</Alert>}
-                            {schema && (
-                                <MultiStepForm
-                                    formId="formSettings"
-                                    onSubmit={handleSubmitSettings}
-                                    formSchema={schema}
-                                />
-                            )}
+                            {schema &&
+                                (formSettingHide ? (
+                                    <MultiStepForm
+                                        formId="formSettings"
+                                        onSubmit={handleSubmitSettings}
+                                        formSchema={schema}
+                                    />
+                                ) : (
+                                    <div>
+                                        <h3>Form settings saved!</h3>
+                                    </div>
+                                ))}
                         </Offcanvas.Body>
                     </motion.div>
                 </Offcanvas>
