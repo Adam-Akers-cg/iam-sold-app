@@ -41,14 +41,31 @@ export default function OffCanvasForm({
             })
     }, [jsonPath])
 
+    // Key for storing score adjustments in localStorage
+    const SCORE_ADJUSTMENT_STORAGE_KEY = 'myApp:formScoreAdjustments'
+
     const handleSubmitSettings = ({ id, data }) => {
         setFormSettingHide(false)
-        console.log(
-            Object.entries(data).filter(
-                ([key, value]) =>
-                    key !== 'undefined' && value !== undefined && value !== '',
-            ),
+
+        // keep only meaningful entries and normalize to [key, value] pairs
+        const cleaned = Object.entries(data).filter(
+            ([key, value]) =>
+                key !== 'undefined' && value !== undefined && value !== '',
         )
+
+        console.log(cleaned)
+
+        try {
+            // Persist to localStorage so other components can read later
+            window.localStorage.setItem(
+                SCORE_ADJUSTMENT_STORAGE_KEY,
+                JSON.stringify(cleaned),
+            )
+        } catch (err) {
+            console.warn('Failed to save settings to localStorage', err)
+        }
+
+        return cleaned
     }
 
     const handleClose = () => {

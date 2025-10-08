@@ -7,7 +7,11 @@ export default function Intro({ introSchema, setIntroHide }) {
             <Card className="text-center">
                 <Card.Body>
                     <Card.Title>{introSchema[0].title}</Card.Title>
-                    <Card.Text>{introSchema[0].intro}</Card.Text>
+                    <Card.Text
+                        dangerouslySetInnerHTML={{
+                            __html: introSchema[0].intro,
+                        }}
+                    />
                     <Button variant="primary" onClick={setIntroHide}>
                         Get Started
                     </Button>

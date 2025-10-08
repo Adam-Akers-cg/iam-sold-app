@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import {
     BsHouseDoor,
@@ -16,13 +16,12 @@ import PillResults from '@/components/forms/pill-results'
 // --- Load default form schema, with fallback ---
 let defaultFormSchema = null
 try {
-    // eslint-disable-next-line global-require
     const s = require('@/pages/data/scoreSchema')
     defaultFormSchema = s.scoreSchema || s.formSchema || s.default || s
 } catch {
     try {
         // fallback older name
-        // eslint-disable-next-line global-require
+
         const s2 = require('@/pages/data/scoreSchema')
         defaultFormSchema = s2.formSchema || s2.scoreSchema || s2
     } catch {
@@ -82,6 +81,23 @@ export default function RecommendationCards({
     answers,
     formSchema = defaultFormSchema,
 }) {
+    // --- Load any saved score adjustments from localStorage ---
+    const [normalizedScoreAdjustmentSaved, setNormalizedScoreAdjustmentSaved] =
+        useState([])
+
+    useEffect(() => {
+        try {
+            const raw = window.localStorage.getItem(
+                'myApp:formScoreAdjustments',
+            )
+            if (raw) setNormalizedScoreAdjustmentSaved(normalizeAnswers(raw))
+            console.log('Loaded score adjustments:', raw)
+        } catch (err) {
+            console.warn('Failed reading score adjustments', err)
+            setNormalizedScoreAdjustmentSaved([])
+        }
+    }, [])
+
     // --- Schema checks ---
     if (!formSchema || !Array.isArray(formSchema) || formSchema.length === 0) {
         return (
@@ -135,6 +151,8 @@ export default function RecommendationCards({
     }))
     results.sort((a, b) => b.total - a.total || a.label.localeCompare(b.label))
 
+    // --- settings adjustments ---
+
     // --- Tie-breaker logic ---
     if (results.length >= 2 && results[0].total === results[1].total) {
         const tieCfg = defaultSettings.tieBreaker
@@ -185,21 +203,18 @@ export default function RecommendationCards({
                                 a.label.localeCompare(b.label),
                         )
                     } else {
-                        // eslint-disable-next-line no-console
                         console.warn(
                             'Tie-breaker mapping matched a scoreType name that does not exist in scoreTypes:',
                             mappedScoreTypeName,
                         )
                     }
                 } else {
-                    // eslint-disable-next-line no-console
                     console.warn(
                         'Tie-breaker configuration does not contain a mapping for the submitted answer:',
                         submittedAnswerKey,
                     )
                 }
             } else {
-                // eslint-disable-next-line no-console
                 console.warn(
                     'Tie-breaker question not found in submitted answers:',
                     tieCfg.question,

@@ -2,9 +2,11 @@ export const scoreSchema = [
     {
         defaultSettings: [
             {
-                assurance: 5,
-                speed: 5,
-                price: 5,
+                scoreAdjustment: {
+                    assurance: [1, 'Traditional Auction'],
+                    speed: [1, 'Modern Method of Auction'],
+                    price: [1, 'Traditional Estate Agent'],
+                },
                 scoreTypes: [
                     'Traditional Auction',
                     'Modern Method of Auction',

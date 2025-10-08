@@ -36,6 +36,11 @@ export default function Home() {
         )
     }, [])
 
+    const handleReStart = useCallback(() => {
+        localStorage.removeItem('myApp:formScoreAdjustments')
+        router.reload()
+    }, [])
+
     return (
         <Layout introHide={showIntro}>
             <Container>
@@ -64,7 +69,7 @@ export default function Home() {
                             />
                             <button
                                 className="btn btn-primary"
-                                onClick={() => router.reload()}
+                                onClick={handleReStart}
                             >
                                 Start another submission
                             </button>
