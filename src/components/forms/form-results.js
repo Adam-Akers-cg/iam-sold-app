@@ -20,8 +20,6 @@ try {
     defaultFormSchema = s.scoreSchema || s.formSchema || s.default || s
 } catch {
     try {
-        // fallback older name
-
         const s2 = require('@/pages/data/scoreSchema')
         defaultFormSchema = s2.formSchema || s2.scoreSchema || s2
     } catch {
@@ -82,19 +80,17 @@ export default function RecommendationCards({
     formSchema = defaultFormSchema,
 }) {
     // --- Load any saved score adjustments from localStorage ---
-    const [normalizedScoreAdjustmentSaved, setNormalizedScoreAdjustmentSaved] =
-        useState([])
+    const [scoreAdjustments, setScoreAdjustments] = useState([])
 
     useEffect(() => {
         try {
             const raw = window.localStorage.getItem(
-                'myApp:formScoreAdjustments',
+                'IamSoldApp:formScoreAdjustments',
             )
-            if (raw) setNormalizedScoreAdjustmentSaved(normalizeAnswers(raw))
-            console.log('Loaded score adjustments:', raw)
+            setScoreAdjustments(raw ? normalizeAnswers(raw) : [])
         } catch (err) {
             console.warn('Failed reading score adjustments', err)
-            setNormalizedScoreAdjustmentSaved([])
+            setScoreAdjustments([])
         }
     }, [])
 
@@ -143,15 +139,33 @@ export default function RecommendationCards({
         })
     })
 
-    // --- Build and sort results ---
+    // --- Apply score adjustments if any ---
     let results = scoreTypes.map((label, idx) => ({
         label,
         total: totals[idx],
         reasons: Array.from(reasonBuckets[idx]),
     }))
-    results.sort((a, b) => b.total - a.total || a.label.localeCompare(b.label))
 
-    // --- settings adjustments ---
+    if (results.length && scoreAdjustments.length) {
+        const scoreAdjustmentConfig = normalizeAnswers(
+            defaultSettings.scoreAdjustment,
+        )
+        const adjustmentMap = Object.fromEntries(scoreAdjustments)
+        results = results.map((result) => {
+            const adjustmentEntry = scoreAdjustmentConfig.find(
+                ([criteria, method]) =>
+                    result.label === method && adjustmentMap[criteria],
+            )
+            if (adjustmentEntry) {
+                const multiplier = adjustmentMap[adjustmentEntry[0]]
+                return { ...result, total: result.total * multiplier }
+            }
+            return result
+        })
+    }
+
+    // --- Sort results ---
+    results.sort((a, b) => b.total - a.total || a.label.localeCompare(b.label))
 
     // --- Tie-breaker logic ---
     if (results.length >= 2 && results[0].total === results[1].total) {
@@ -294,6 +308,6 @@ export default function RecommendationCards({
 }
 
 RecommendationCards.propTypes = {
-    answers: PropTypes.any.isRequired, // we normalize many shapes
+    answers: PropTypes.any.isRequired,
     formSchema: PropTypes.any,
 }

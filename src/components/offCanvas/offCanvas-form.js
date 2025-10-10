@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Offcanvas, Spinner, Alert, Button } from 'react-bootstrap'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MultiStepForm } from '@/components/forms/multi-step-form'
 
-// ✅ Moved outside component for testability
+// Schema loader map for dynamic import
 export const schemaMap = {
     standard: () => import('@/pages/data/formSchema.js'),
     settings: () => import('@/pages/data/formSchema-settings.js'),
     // Add more schemas here
 }
+
+const SCORE_ADJUSTMENT_STORAGE_KEY = 'IamSoldApp:formScoreAdjustments'
 
 export default function OffCanvasForm({
     show,
@@ -24,11 +26,11 @@ export default function OffCanvasForm({
     const [error, setError] = useState(null)
     const [formSettingHide, setFormSettingHide] = useState(true)
 
+    // Load schema dynamically when jsonPath changes
     useEffect(() => {
         if (!jsonPath || !schemaMap[jsonPath]) return
         setLoading(true)
         setError(null)
-
         schemaMap[jsonPath]()
             .then((mod) => {
                 setSchema(mod.formSchema)
@@ -41,22 +43,14 @@ export default function OffCanvasForm({
             })
     }, [jsonPath])
 
-    // Key for storing score adjustments in localStorage
-    const SCORE_ADJUSTMENT_STORAGE_KEY = 'myApp:formScoreAdjustments'
-
-    const handleSubmitSettings = ({ id, data }) => {
+    // Handle settings form submit
+    const handleSubmitSettings = useCallback(({ id, data }) => {
         setFormSettingHide(false)
-
-        // keep only meaningful entries and normalize to [key, value] pairs
         const cleaned = Object.entries(data).filter(
             ([key, value]) =>
                 key !== 'undefined' && value !== undefined && value !== '',
         )
-
-        console.log(cleaned)
-
         try {
-            // Persist to localStorage so other components can read later
             window.localStorage.setItem(
                 SCORE_ADJUSTMENT_STORAGE_KEY,
                 JSON.stringify(cleaned),
@@ -64,15 +58,16 @@ export default function OffCanvasForm({
         } catch (err) {
             console.warn('Failed to save settings to localStorage', err)
         }
-
         return cleaned
-    }
+    }, [])
 
-    const handleClose = () => {
+    // Handle close
+    const handleClose = useCallback(() => {
         setFormSettingHide(true)
         onHide()
-    }
+    }, [onHide])
 
+    // Animation variants
     const variants = {
         hidden: {
             x:
@@ -152,6 +147,12 @@ export default function OffCanvasForm({
                                 ) : (
                                     <div>
                                         <h3>Form settings saved!</h3>
+                                        <Button
+                                            variant="primary"
+                                            onClick={handleClose}
+                                        >
+                                            Close
+                                        </Button>
                                     </div>
                                 ))}
                         </Offcanvas.Body>

@@ -7,10 +7,8 @@ import { formSchema } from '../pages/data/formSchema'
 import { scoreSchema } from '../pages/data/scoreSchema'
 import { introSchema } from '../pages/data/introSchema'
 import Intro from '../components/intro/intro'
-import { useRouter } from 'next/router'
 
 export default function Home() {
-    const router = useRouter()
     const [showForm, setShowForm] = useState(true)
     const [showIntro, setShowIntro] = useState(true)
     const [formResults, setFormResults] = useState(null)
@@ -21,12 +19,6 @@ export default function Home() {
     }, [])
 
     const handleFormSubmit = useCallback(({ id, data }) => {
-        console.log(
-            Object.entries(data).filter(
-                ([key, value]) =>
-                    key !== 'undefined' && value !== undefined && value !== '',
-            ),
-        )
         setShowForm(false)
         setFormResults(
             Object.entries(data).filter(
@@ -37,8 +29,10 @@ export default function Home() {
     }, [])
 
     const handleReStart = useCallback(() => {
-        localStorage.removeItem('myApp:formScoreAdjustments')
-        router.reload()
+        localStorage.removeItem('IamSoldApp:formScoreAdjustments')
+        setShowForm(true)
+        setFormResults(null)
+        setShowIntro(true)
     }, [])
 
     return (
