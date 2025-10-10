@@ -5,14 +5,8 @@ export const formSchema = [
         fields: [
             {
                 type: 'html',
-                label: `<h5>Form settings</h5><p>Use the following form to set the required values</p>`,
+                label: `<h5>Set you score weighting here</h5><p>Use the following form to set the required values</p>`,
             },
-        ],
-    },
-    {
-        step: 1,
-        title: 'Form levels',
-        fields: [
             {
                 label: 'Assurance Level %',
                 name: 'assurance',

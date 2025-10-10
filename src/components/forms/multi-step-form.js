@@ -130,47 +130,50 @@ export const MultiStepForm = ({ onSubmit, formSchema, formId = 'default' }) => {
     }, [stepFields, formData, formErrors, handleChange])
 
     // Render step indicators
-    const renderStepIndicators = useCallback(
-        () => (
-            <div className="d-flex justify-content-between align-items-center mb-5 position-relative">
-                {formSchema.map((_, i) => (
-                    <div
-                        key={i}
+    const renderStepIndicators = useCallback(() => {
+        if (formSchema.length > 1) {
+            return (
+                <div className="d-flex justify-content-between align-items-center mb-5 position-relative">
+                    {formSchema.map((_, i) => (
+                        <div
+                            key={i}
+                            className={clsx(
+                                style['progress-bar-marker'],
+                                {
+                                    'bg-primary text-white': step === i,
+                                    'bg-light': step !== i,
+                                },
+                                'rounded-circle border border-primary d-flex justify-content-center align-items-center',
+                            )}
+                        >
+                            {i + 1}
+                        </div>
+                    ))}
+                    {/* Progress track line */}
+                    <motion.div
                         className={clsx(
-                            style['progress-bar-marker'],
-                            {
-                                'bg-primary text-white': step === i,
-                                'bg-light': step !== i,
-                            },
-                            'rounded-circle border border-primary d-flex justify-content-center align-items-center',
+                            style['progress-bar'],
+                            'position-absolute bg-primary',
                         )}
-                    >
-                        {i + 1}
-                    </div>
-                ))}
-                {/* Progress track line */}
-                <motion.div
-                    className={clsx(
-                        style['progress-bar'],
-                        'position-absolute bg-primary',
-                    )}
-                    initial={{ width: 0 }}
-                    animate={{
-                        width: `${(step / (formSchema.length - 1)) * 100}%`,
-                    }}
-                    transition={{ duration: 0.5 }}
-                />
-                <div className={clsx(style['progress-bar-bg'])}></div>
-            </div>
-        ),
-        [formSchema, step],
-    )
+                        initial={{ width: 0 }}
+                        animate={{
+                            width: `${(step / (formSchema.length - 1)) * 100}%`,
+                        }}
+                        transition={{ duration: 0.5 }}
+                    />
+                    <div className={clsx(style['progress-bar-bg'])}></div>
+                </div>
+            )
+        }
+        return null
+    }, [formSchema, step, stepFields.length])
 
     // --- Render ---
     return (
         <Container className="p-0 mb-5">
             <h2 className="mb-4">{currentStep.title}</h2>
             <p className="mb-4">{currentStep.description}</p>
+
             {renderStepIndicators()}
 
             <Form onSubmit={handleSubmit}>
@@ -205,9 +208,9 @@ export const MultiStepForm = ({ onSubmit, formSchema, formId = 'default' }) => {
                         <Button variant="secondary" onClick={prevStep}>
                             <BsChevronLeft /> Back
                         </Button>
-                    ) : (
+                    ) : formSchema.length > 1 ? (
                         <span />
-                    )}
+                    ) : null}
                     {step < formSchema.length - 1 ? (
                         <Button onClick={nextStep}>
                             Next <BsChevronRight />
